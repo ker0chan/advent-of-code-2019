@@ -14,14 +14,13 @@ fn main() {
     132187, 70849, 98839];
 
     // PART 1
-    //Folding is similar to reduce in JS
-    // m is a borrow, needs dereferencing! (*m)
-    let sum = masses.iter().fold(0, |acc, m| acc + compute_fuel(*m));
+    //m is a borrow, needs dereferencing! (*m)
+    let sum: u32 = masses.iter().map(|m| compute_fuel(*m)).sum();
 
     println!("Part 1 answer: {}", sum);
 
     // PART 2
-    let sum = masses.iter().fold(0, |acc, m| acc + compute_fuel_and_fuel_for_fuel(*m, 0));
+    let sum: u32 = masses.iter().map(|m| compute_fuel_and_fuel_for_fuel(*m, 0)).sum();
 
     //Use the example to make sure we didn't mess up?
     assert_eq!(compute_fuel_and_fuel_for_fuel(1969, 0), 966);
