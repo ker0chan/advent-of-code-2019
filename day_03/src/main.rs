@@ -28,7 +28,7 @@ impl Dir {
     }
 }
 
-//Eq, PartialEq, and Hash are needed for HashSet
+//Eq, PartialEq, and Hash are needed for HashSet/HashMap
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 struct Point {
     x: i32,
@@ -51,6 +51,7 @@ impl Point {
     }
 }
 
+use std::collections::HashMap;
 use std::collections::HashSet;
 fn main() {
     //Where the wires start from
@@ -62,6 +63,8 @@ fn main() {
             let mut current_position = origin;
             //Store all the points in a HashSet
             let mut points = HashSet::<Point>::new();
+            let mut steps_taken = HashMap::<Point, u32>::new();
+            let mut steps = 0;
             //Each wire has a bunch of segments separated by commas
             String::from(wire).split(",").for_each(|segment| {
                 //Parse the direction from the first character.
@@ -73,22 +76,38 @@ fn main() {
                     current_position += direction.to_point();
                     //Try to add the point to the HashSet (self-intersections won't work but we ignore those)
                     points.insert(current_position);
+                    //Keep track of the number of steps it took to reach that point
+                    steps += 1;
+                    //Note that HashMap won't let us overwrite the amount of steps if we reach a point twice. That's useful!
+                    steps_taken.insert(current_position, steps);
                 }
             });
-            points
+            (points, steps_taken)
         });
-    let wire1 = wires.next().expect("There should be wires");
-    let wire2 = wires.next().expect("There should be two wires");
+    let (wire1_points, wire1_steps) = wires.next().expect("There should be wires");
+    let (wire2_points, wire2_steps) = wires.next().expect("There should be two wires");
     assert!(
         wires.next().is_none(),
         "There should be *exactly* two wires"
     );
+
+    // PART 1
     println!(
         "{}",
-        wire1
-            .intersection(&wire2) //Find all the points that are on both wires
+        wire1_points
+            .intersection(&wire2_points) //Find all the points that are on both wires
             .min_by_key(|p| p.manhattan()) //.min_by_key returns the point that gives the minimum value for manhattan() (= the point closest to the origin)
             .unwrap()
-            .manhattan()
+            .manhattan() //The lowest manhattant distance is the answer to part 1 :3
+    );
+
+    // PART 2
+    println!(
+        "{}",
+        wire1_points
+            .intersection(&wire2_points) //Find all the points that are on both wires
+            .map(|p| wire1_steps[p] + wire2_steps[p]) //Figure out how many steps it took to get there
+            .min() //The amount of steps it took to reach the earliest intersection is the answer to part 2 :3
+            .unwrap()
     );
 }
