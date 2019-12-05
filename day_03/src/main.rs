@@ -28,8 +28,8 @@ impl Dir {
     }
 }
 
-//Eq and Hash are needed for HashSet (along with PartialEq, lower down)
-#[derive(Copy, Clone, Eq, Hash)]
+//Eq, PartialEq, and Hash are needed for HashSet
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
 struct Point {
     x: i32,
     y: i32,
@@ -43,23 +43,7 @@ impl std::ops::AddAssign for Point {
         };
     }
 }
-//Ordering by Manhattan distance with .sort() requires Ord, PartialOrd and PartialEq
-use std::cmp::Ordering;
-impl Ord for Point {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.manhattan().cmp(&other.manhattan())
-    }
-}
-impl PartialOrd for Point {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl PartialEq for Point {
-    fn eq(&self, other: &Self) -> bool {
-        self.manhattan() == other.manhattan()
-    }
-}
+
 // https://en.wikipedia.org/wiki/Taxicab_geometry
 impl Point {
     fn manhattan(&self) -> i32 {
@@ -69,17 +53,15 @@ impl Point {
 
 use std::collections::HashSet;
 fn main() {
-    //Store all the points in a HashSet (it'll tell us if we insert a point that already exists)
-    let mut points = HashSet::<Point>::new();
-    //Store the intersections, we'll sort them later
-    let mut intersections = Vec::new();
     //Where the wires start from
     let origin = Point { x: 0, y: 0 };
-    include_str!("input.txt") //Read the input
+    let mut wires = include_str!("input.txt") //Read the input
         .lines()
         //Each line in the file is a "wire"
-        .for_each(|wire| {
+        .map(|wire| {
             let mut current_position = origin;
+            //Store all the points in a HashSet
+            let mut points = HashSet::<Point>::new();
             //Each wire has a bunch of segments separated by commas
             String::from(wire).split(",").for_each(|segment| {
                 //Parse the direction from the first character.
@@ -89,16 +71,24 @@ fn main() {
                 for _ in 0..segment[1..].parse().unwrap() {
                     //Move to the next point on that segment
                     current_position += direction.to_point();
-                    //Try to add the point to the HashSet
-                    if !points.insert(current_position) {
-                        //Insert returns false on existing values: we already got this point, it's an intersection!
-                        intersections.push(current_position);
-                    }
+                    //Try to add the point to the HashSet (self-intersections won't work but we ignore those)
+                    points.insert(current_position);
                 }
             });
+            points
         });
-    //Sort the intersections by Manhattan distance
-    intersections.sort();
-    //The first one is the lowest one, that's the answer to Part 1 :3
-    println!("{}", intersections[0].manhattan());
+    let wire1 = wires.next().expect("There should be wires");
+    let wire2 = wires.next().expect("There should be two wires");
+    assert!(
+        wires.next().is_none(),
+        "There should be *exactly* two wires"
+    );
+    println!(
+        "{}",
+        wire1
+            .intersection(&wire2) //Find all the points that are on both wires
+            .min_by_key(|p| p.manhattan()) //.min_by_key returns the point that gives the minimum value for manhattan() (= the point closest to the origin)
+            .unwrap()
+            .manhattan()
+    );
 }
