@@ -14,7 +14,7 @@ fn main() {
     intcode[1] = 12;
     intcode[2] = 2;
     //Execute the thing
-    execute(&mut intcode, None);
+    execute(&mut intcode, &vec![]);
     //Now read the thing >:3
     println!("{}", intcode[0]);
 
@@ -32,7 +32,7 @@ fn main() {
             ];
             intcode[1] = noun;
             intcode[2] = verb;
-            execute(&mut intcode, None);
+            execute(&mut intcode, &vec![]);
             if intcode[0] == 19690720 {
                 println!(
                     "verb: {}, noun:{}, result:{}",
